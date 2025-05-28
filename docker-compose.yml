@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  go-service:
+    build:
+      context: ./backend/go
+    ports:
+      - "8080:8080"
+    command: go run ./cmd/trading-api
+    volumes:
+      - ./backend/go:/app
+
+  python-service:
+    build:
+      context: ./backend/python
+    ports:
+      - "8000:8000"
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./backend/python:/app
+
+  node-server:
+    build:
+      context: ./frontend/server
+    ports:
+      - "3001:3001"
+    command: node index.js
+    volumes:
+      - ./frontend/server:/app
+    environment:
+      - PORT=3001
+      - PYTHON_API_URL=http://python-service:8000
+      - GO_API_URL=http://go-service:8080
+    depends_on:
+      - python-service
+      - go-service
+
+  react-client:
+    build:
+      context: ./frontend/client
+    ports:
+      - "3000:3000"
+    stdin_open: true
+    tty: true
+    command: npm start
+    volumes:
+      - ./frontend/client:/app
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - node-server
