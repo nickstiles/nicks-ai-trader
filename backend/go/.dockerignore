@@ -1,0 +1,26 @@
+# Node & Python build artifacts
+node_modules
+dist
+.env
+.env.local
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv
+*.egg-info
+
+# Logs and OS junk
+*.log
+.DS_Store
+Thumbs.db
+
+# Docker files
+Dockerfile*
+docker-compose.yml
+
+# IDE/editor settings
+.vscode
+.idea
+*.swp
+*.swo

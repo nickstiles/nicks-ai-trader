@@ -20,7 +20,9 @@ def read_root():
 
 @app.post("/predict", response_model=PredictionResponse)
 def predict_trade(req: PredictionRequest):
-    # Simulated prediction logic — replace with your real model later
+    print("📨 [FastAPI] Received prediction request:", req.dict())
     signal = random.choice(['buy', 'sell', 'hold'])
     confidence = round(random.uniform(0.5, 0.99), 2)
-    return {"signal": signal, "confidence": confidence}
+    result = {"signal": signal, "confidence": confidence}
+    print("📤 [FastAPI] Sending prediction response:", result)
+    return result
