@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import AsyncSelect from 'react-select/async';
+import { loadTickerOptions } from "../services/tickers";
 
 const TradeForm = ({ onSubmit }) => {
-  const [ticker, setTicker] = useState('');
+  const [ticker, setTicker] = useState(null);
   const [action, setAction] = useState('buy');
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -9,7 +11,7 @@ const TradeForm = ({ onSubmit }) => {
   const handleSubmit = async e => {
     e.preventDefault();
     setLoading(true);
-    await onSubmit({ ticker, action, quantity });
+    await onSubmit({ ticker: ticker.value, action, quantity });
     setLoading(false);
   };
 
@@ -18,13 +20,14 @@ const TradeForm = ({ onSubmit }) => {
       <h2 className="text-2xl font-semibold text-gray-800">Submit a Trade</h2>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Ticker</label>
-        <input
-          type="text"
-          value={ticker}
-          onChange={e => setTicker(e.target.value)}
-          className="w-full border rounded px-3 py-2 focus:ring-blue-500"
-          placeholder="AAPL"
+        <label className="block text-sm font-medium text-gray-700 mb-1">Ticker Symbol</label>
+        <AsyncSelect
+          cacheOptions
+          loadOptions={loadTickerOptions}
+          defaultOptions={[]}
+          onChange={setTicker}            // ticker is now an object { value, label }
+          placeholder="Start typing a ticker..."
+          className="react-select-container"
         />
       </div>
 

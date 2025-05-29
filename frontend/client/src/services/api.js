@@ -35,3 +35,16 @@ export async function submitTrade({ ticker, action, quantity }) {
   if (!res.ok) throw new Error("Trade submission failed");
   return res.json();
 }
+
+/**
+ * Run a backtest via FastAPI → Node proxy.
+ */
+export async function postBacktest({ ticker, period = "1mo", timeframe = "1d", short_window = 5, long_window = 20, quantity = 10 }) {
+  const res = await fetch(`${API_BASE}/backtest`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ticker, period, timeframe, short_window, long_window, quantity }),
+  });
+  if (!res.ok) throw new Error("Backtest request failed");
+  return res.json();
+}
