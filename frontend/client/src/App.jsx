@@ -1,21 +1,31 @@
 import React, { useState, useEffect } from "react";
-import { getStatus, postPrediction } from "./services/api";
+import { getStatus, postPrediction, submitTrade } from "./services/api";
 import StatusCard from "./components/StatusCard";
 import PredictForm from "./components/PredictForm";
+import TradeForm from "./components/TradeForm";
 
 function App() {
   const [status, setStatus] = useState(null);
   const [prediction, setPrediction] = useState(null);
+  const [orderResponse, setOrderResponse] = useState(null);
 
   useEffect(() => {
     getStatus().then(setStatus);
   }, []);
 
-  const handlePredict = async (ticker, prices, timeframe) => {
-    console.log("\uD83D\uDCE4 Sending prediction request:", { ticker, prices, timeframe });
-    const result = await postPrediction(ticker, prices, timeframe);
-    console.log("\uD83D\uDCE5 Received prediction result:", result);
+  const handlePredict = async (ticker, timeframe) => {
+    console.log("📤 Sending prediction request:", { ticker, timeframe });
+    // send empty recent_prices to trigger live data fetch
+    const result = await postPrediction(ticker, [], timeframe);
+    console.log("📥 Received prediction result:", result);
     setPrediction(result);
+  };
+
+  const handleTrade = async (order) => {
+    console.log("📤 Sending trade:", order);
+    const resp = await submitTrade(order);
+    console.log("📥 Trade response:", resp);
+    setOrderResponse(resp);
   };
 
   return (
@@ -27,6 +37,15 @@ function App() {
 
         <StatusCard status={status} />
         <PredictForm onSubmit={handlePredict} />
+        <TradeForm onSubmit={handleTrade} />
+
+        {orderResponse && (
+          <div className="p-4 bg-blue-50 border border-blue-300 rounded-lg shadow">
+            <h3 className="text-xl font-semibold text-blue-700">Order Executed</h3>
+            <p><strong>Order ID:</strong> {orderResponse.order_id}</p>
+            <p><strong>Status:</strong> {orderResponse.status}</p>
+          </div>
+        )}
 
         {prediction && (
           <div className="p-4 bg-green-50 border border-green-300 rounded-lg shadow">

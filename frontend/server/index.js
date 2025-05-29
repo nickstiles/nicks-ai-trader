@@ -43,6 +43,22 @@ app.get('/api/status', async (req, res) => {
   }
 });
 
+// Proxy to Go trade submission endpoint
+app.post('/api/submit-trade', async (req, res) => {
+  console.log("🔁 [Node] Received /api/submit-trade request:", req.body);
+  try {
+    const response = await axios.post(
+      `${GO_API_URL}/submit-trade`,
+      req.body
+    );
+    console.log("✅ [Node] Response from Go (submit-trade):", response.data);
+    res.json(response.data);
+  } catch (error) {
+    console.error("❌ [Node] Submit trade proxy error:", error.message);
+    res.status(500).json({ error: 'Trade service unavailable' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Node API server listening on http://localhost:${PORT}`);
 });
