@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   go-service:
     build:
@@ -31,6 +29,8 @@ services:
       - PORT=3001
       - PYTHON_API_URL=http://python-service:8000
       - GO_API_URL=http://go-service:8080
+    env_file:
+      - ./frontend/server/.env
     depends_on:
       - python-service
       - go-service
