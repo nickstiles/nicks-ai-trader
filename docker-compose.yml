@@ -1,51 +1,65 @@
 services:
-  go-service:
-    build:
-      context: ./backend/go
-    ports:
-      - "8080:8080"
-    command: go run ./cmd/trading-api
-    volumes:
-      - ./backend/go:/app
-
-  python-service:
+  signal_generator:
     build:
       context: ./backend/python
+      dockerfile: Dockerfile
+    container_name: signal_generator
     ports:
-      - "8000:8000"
-    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+      - "8001:8001"
+    env_file:
+      - .env
+    environment:
+      - SERVICE_NAME=signal_generator
+    command: uvicorn api.signal_generator.main:app --host 0.0.0.0 --port 8001
     volumes:
       - ./backend/python:/app
 
-  node-server:
+  trade_manager:
+    build:
+      context: ./backend/python
+      dockerfile: Dockerfile
+    container_name: trade_manager
+    ports:
+      - "8002:8002"
+    env_file:
+      - .env
+    environment:
+      - SERVICE_NAME=trade_manager
+    command: uvicorn api.trade_manager.main:app --host 0.0.0.0 --port 8002
+    volumes:
+      - ./backend/python:/app
+
+  frontend_node:
     build:
       context: ./frontend/server
+      dockerfile: Dockerfile
+    container_name: frontend_node
     ports:
       - "3001:3001"
-    command: node index.js
-    volumes:
-      - ./frontend/server:/app
     environment:
       - PORT=3001
-      - PYTHON_API_URL=http://python-service:8000
-      - GO_API_URL=http://go-service:8080
-    env_file:
-      - ./frontend/server/.env
+      - SIGNAL_GENERATOR_URL=http://signal_generator:8001
+      - TRADE_MANAGER_URL=http://trade_manager:8002
+    working_dir: /app
+    volumes:
+      - ./frontend/server:/app
+      - /app/node_modules
+    command: node index.js
     depends_on:
-      - python-service
-      - go-service
+      - signal_generator
+      - trade_manager
 
-  react-client:
+  frontend_client:
     build:
       context: ./frontend/client
+      dockerfile: Dockerfile
+    container_name: frontend_client
     ports:
-      - "3000:3000"
-    stdin_open: true
-    tty: true
-    command: npm start
+      - "5173:5173"
+    working_dir: /app
     volumes:
       - ./frontend/client:/app
-    environment:
-      - CHOKIDAR_USEPOLLING=true
+      - /app/node_modules
+    command: npm run dev
     depends_on:
-      - node-server
+      - frontend_node

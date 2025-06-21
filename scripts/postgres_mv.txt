@@ -1,0 +1,73 @@
+DROP MATERIALIZED VIEW IF EXISTS mv_ml_features;
+
+CREATE MATERIALIZED VIEW mv_ml_features AS
+SELECT
+  o.ticker,
+  o.trade_date,
+  o.option_symbol,
+  o.option_type,
+  o.strike,
+  o.opt_volume,
+  o.opt_close,
+
+  -- VIX
+  v.vix_close,
+
+  -- Stock features
+  s.price_change_3d,
+  s.stk_high,
+  s.stk_low,
+  s.stk_close,
+  s.stk_volume,
+  s.stk_range_pct,
+  s.ma5_ma10_diff,
+  s.rsi_14,
+  s.realized_vol_10d,
+  s.stk_return_1d,
+  s.atr_5,
+  s.sma_5,
+  s.stk_vol_chg_pct,
+
+  -- Option features
+  o.moneyness,
+
+  -- delta_skew via window diff
+  COALESCE(
+    o.iv_skew_atm
+    - LAG(o.iv_skew_atm) OVER (PARTITION BY o.ticker ORDER BY o.trade_date),
+    0
+  ) AS delta_skew,
+
+  o.delta,
+  o.delta_iv,
+  o.delta_gamma,
+  o.iv_skew_atm,
+  o.implied_volatility,
+
+  -- delta_sqrt_t = delta * sqrt(dte_days + 1e-12)
+  (o.delta * sqrt(
+      o.dte_days::double precision
+    + 1e-12
+  )) AS delta_sqrt_t,
+
+  o.gamma,
+  o.skew_vol,
+  o.theta,
+  o.vega,
+  o.dte_days
+
+FROM daily_option_features o
+JOIN daily_stock_features  s
+  ON o.ticker     = s.ticker
+ AND o.trade_date = s.trade_date
+JOIN vix_data v
+  ON o.trade_date = v.trade_date
+
+WITH NO DATA;
+
+-- Index for fast filtering
+CREATE INDEX ON mv_ml_features (trade_date);
+CREATE INDEX ON mv_ml_features (ticker);
+CREATE INDEX ON mv_ml_features (option_symbol);
+
+REFRESH MATERIALIZED VIEW mv_ml_features;

@@ -4,6 +4,8 @@
 .env.*
 .DS_Store
 Thumbs.db
+*.zip
+
 
 # ---- Python ----
 __pycache__/
@@ -13,6 +15,8 @@ __pycache__/
 *.egg-info/
 .Python
 .env/
+.venv311/
+venv311/
 .venv/
 venv/
 pip-wheel-metadata/
@@ -29,6 +33,8 @@ bin/
 *.log
 *.tmp
 *.cache
+*.pkl
+*.csv
 
 # Go coverage profiles
 *.cover
